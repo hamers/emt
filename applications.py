@@ -42,7 +42,11 @@ def parse_arguments():
     
 
    
-def plot_function_compare_sep(cmd_args,data1,data2,ylim3=None):
+def plot_function_compare_sep(cmd_args,data1,data2,ylim3=None,\
+    extra_A_data1=None,extra_A_data2=None, \
+    extra_B_data1=None,extra_B_data2=None, \
+    label_A_1=None,label_A_2=None, \
+    label_B_1=None,label_B_2=None):
     if cmd_args.plot_fancy == True:
         pyplot.rc('text',usetex=True)
         pyplot.rc('legend',fancybox=True)
@@ -66,19 +70,44 @@ def plot_function_compare_sep(cmd_args,data1,data2,ylim3=None):
     plot2=fig.add_subplot(3,1,2)
     plot3=fig.add_subplot(3,1,3)
     
+    figB=pyplot.figure(figsize=(8,10))
+    plotB=figB.add_subplot(3,1,1,yscale="log")
+
     label1="$\mathrm{emt}$"
     label2="$\mathrm{Sepinsky}$"
     
     plot1.plot(times1,a_sol1,color='k',label=label1,linewidth=linewidth)
     plot1.plot(times2,a_sol2,color='k',linestyle='dashed',label=label2,linewidth=linewidth2)
-    plot1.plot(times1,a*(M_d*M_a/(M_d_sol1*M_a_sol1))**2,color='r',linestyle='dotted',label="$\mathrm{Analytic\,(circular \,only)}$",linewidth=linewidth)
-
+    plot1.plot(times1,a*(M_d*M_a/(M_d_sol1*M_a_sol1))**2,color='C3',linestyle='dotted',label="$\mathrm{Analytic\,(circular \,only)}$",linewidth=linewidth)
+    
     plot2.plot(times1,e_sol1,color='k',linewidth=linewidth,label=label1)
     plot2.plot(times2,e_sol2,color='k',linestyle='dashed',linewidth=linewidth2,label=label2)
     plot3.plot(times1,M_d_sol1/M_a_sol1,color='k',linewidth=linewidth,label=label1)
     plot3.plot(times2,M_d_sol2/M_a_sol2,color='k',linestyle='dashed',linewidth=linewidth2,label=label2)
     plot3.plot(times1,E_0_sol1,color='C3',linestyle='dashed',label=label1)
     
+    if extra_A_data1!=None and extra_A_data2!=None:
+        A_times1,A_a_sol1,A_e_sol1,A_omega_sol1,A_M_d_sol1,A_M_a_sol1,A_E_0_sol1 = extra_A_data1
+        A_times2,A_a_sol2,A_e_sol2,A_omega_sol2,A_M_d_sol2,A_M_a_sol2,A_E_0_sol2 = extra_A_data2
+        A_times1 *= 1.0e-6
+        A_times2 *= 1.0e-6
+        linewidth=1.0
+        plot2.plot(A_times1,A_e_sol1,color='C0',linewidth=linewidth,label=label_A_1)
+        plot2.plot(A_times2,A_e_sol2,color='C0',linestyle='dashed',linewidth=linewidth,label=label_A_2)
+    if extra_B_data1!=None and extra_B_data2!=None:
+        B_times1,B_a_sol1,B_e_sol1,B_omega_sol1,B_M_d_sol1,B_M_a_sol1,B_E_0_sol1 = extra_B_data1
+        B_times2,B_a_sol2,B_e_sol2,B_omega_sol2,B_M_d_sol2,B_M_a_sol2,B_E_0_sol2 = extra_B_data2
+        B_times1 *= 1.0e-6
+        B_times2 *= 1.0e-6
+        linewidth=0.5
+        plot2.plot(B_times1,B_e_sol1,color='C5',linewidth=linewidth,label=label_B_1)
+        plot2.plot(B_times2,B_e_sol2,color='C5',linestyle='dashed',linewidth=linewidth,label=label_B_2)
+
+    
+    plotB.plot(times1,M_d_sol1*M_a_sol1*np.sqrt(a_sol1*(1.0-e_sol1**2)),color='k',label=label1,linewidth=linewidth)
+    plotB.plot(times2,M_d_sol2*M_a_sol2*np.sqrt(a_sol2*(1.0-e_sol2**2)),color='k',linestyle='dashed',label=label2,linewidth=linewidth2)
+
+
     plots = [plot1,plot2,plot3]
     labels = [r"$a/\mathrm{AU}$",r"$e$",r"$q; \mathcal{E}_0/\mathrm{rad}$"]
     for index,plot in enumerate(plots):
@@ -91,18 +120,18 @@ def plot_function_compare_sep(cmd_args,data1,data2,ylim3=None):
         if index in [0,1]:
             plot.set_xticklabels([])
 
-
     if ylim3 != None:
         plot3.set_ylim(0,ylim3)
 
+    beta=0.7
     handles,labels = plot1.get_legend_handles_labels()
-    plot1.legend(handles,labels,loc=cmd_args.plot1_loc,fontsize=0.8*fontsize)
+    plot1.legend(handles,labels,loc=cmd_args.plot1_loc,fontsize=beta*fontsize)
 
     handles,labels = plot2.get_legend_handles_labels()
-    plot2.legend(handles,labels,loc=cmd_args.plot2_loc,fontsize=0.8*fontsize)
+    plot2.legend(handles,labels,loc=cmd_args.plot2_loc,fontsize=beta*fontsize)
 
     handles,labels = plot3.get_legend_handles_labels()
-    plot3.legend(handles,labels,loc=cmd_args.plot3_loc,fontsize=0.8*fontsize)
+    plot3.legend(handles,labels,loc=cmd_args.plot3_loc,fontsize=beta*fontsize)
 
     plot3.axhline(y=1.0,linestyle='dotted',color='k')
     plot3.axhline(y=np.pi,linestyle='dotted',color='C3')
@@ -127,6 +156,10 @@ def plot_function_compare_size(cmd_args,data1,data2,plot_omega=False,ylim3=None)
     times1 *= 1.0e-6
     times2 *= 1.0e-6
 
+    figB=pyplot.figure(figsize=(8,10))
+    plotB=figB.add_subplot(3,1,1,yscale="log")
+
+
 
     fontsize=22
     labelsize=18
@@ -143,7 +176,11 @@ def plot_function_compare_size(cmd_args,data1,data2,plot_omega=False,ylim3=None)
     
     plot1.plot(times1,a_sol1,color='k',label=label1,linewidth=linewidth)
     plot1.plot(times2,a_sol2,color='k',linestyle='dashed',label=label2,linewidth=linewidth2)
-    plot1.plot(times1,a*(M_d*M_a/(M_d_sol1*M_a_sol1))**2,color='r',linestyle='dotted',label="$\mathrm{Analytic\,(circular \,only)}$",linewidth=linewidth)
+    plot1.plot(times1,a*(M_d*M_a/(M_d_sol1*M_a_sol1))**2,color='C3',linestyle='dotted',label="$\mathrm{Analytic\,(circular \,only)}$",linewidth=linewidth)
+
+    plotB.plot(times1,M_d_sol1*M_a_sol1*np.sqrt(a_sol1*(1.0-e_sol1**2)),color='k',label=label1,linewidth=linewidth)
+    plotB.plot(times2,M_d_sol2*M_a_sol2*np.sqrt(a_sol2*(1.0-e_sol2**2)),color='k',linestyle='dashed',label=label2,linewidth=linewidth2)
+
 
     plot2.plot(times1,e_sol1,color='k',linewidth=linewidth,label=label1)
     plot2.plot(times2,e_sol2,color='k',linestyle='dashed',linewidth=linewidth2,label=label2)
@@ -153,7 +190,6 @@ def plot_function_compare_size(cmd_args,data1,data2,plot_omega=False,ylim3=None)
     plot3.plot(times1,E_0_sol2,color='C3',linestyle='dashed',linewidth=linewidth2,label=label2)
 
     if plot_omega==True:
-        #plot3.plot(times1,omega_sol1,color='k',linewidth=linewidth)
         plot3.plot(times2,omega_sol2,color='C0',linestyle='dashed',linewidth=linewidth2,label=r"$\omega\,(\tau\neq0)$")
     
     #pyplot.rc('text.latex', preamble='\usepackage{xcolor}')
@@ -385,28 +421,78 @@ if __name__ == '__main__':
 
         plot_function_compare_sep(cmd_args,data_emt,data_sep)
 
+    elif application_id==10: ### circular binary; initial mass ratio <1
+        args.M_d = 1.5
+        args.M_d_dot_av = -1.0e-8
+
+        args.M_a = 2.0
+        args.e = 0.0
+        args.a = 1.0
+        args.R = 1000.0
+        args.t_end = 0.7
+
+        args.model = "emt"
+        data_emt = integrator.integrate(args)
+
+        args.model = "sep"
+
+        data_sep = integrator.integrate(args)
+
+        cmd_args.filename = "binary_circular_low_q.pdf"
+        cmd_args.plot1_loc = cmd_args.plot2_loc = "upper left"
+        cmd_args.plot2_loc = "center left"
+        cmd_args.plot3_loc = "center right"        
+
+        plot_function_compare_sep(cmd_args,data_emt,data_sep)
+
     elif application_id==1: ### eccentric binary -- emt vs sep
         args.M_d = 8.0
         args.M_d_dot_av = -1.0e-8
 
         args.rp_min = 10.0*RSun_in_AU
         args.M_a = 1.4
-        args.e = 0.92
+        
         args.a = 1.0
         args.R = 10.0
         args.t_end = 0.5
         
+        args.e = 0.92
         args.model = "emt"
         data_emt = integrator.integrate(args)
 
         args.model = "sep"
         data_sep = integrator.integrate(args)
 
+        args.e = 0.45
+        args.a = 0.1
+        args.model = "emt"
+        extra_A_data1 = integrator.integrate(args)
+
+        args.model = "sep"
+        extra_A_data2 = integrator.integrate(args)
+
+        args.e = 0.2
+        args.a = 0.08
+        args.model = "emt"
+        extra_B_data1 = integrator.integrate(args)
+
+        args.model = "sep"
+        extra_B_data2 = integrator.integrate(args)
+
+        ### change args.a back to 1.0 for plotting purposes ###
+        args.a = 1.0
+
         cmd_args.filename = "binary_eccentric.pdf"
         cmd_args.plot1_loc = "upper right"
-        cmd_args.plot2_loc = "center right"
+        cmd_args.plot2_loc = "upper right"
         cmd_args.plot3_loc = "upper right"        
-        plot_function_compare_sep(cmd_args,data_emt,data_sep,ylim3=2.0*np.pi)
+        plot_function_compare_sep(cmd_args,data_emt,data_sep,ylim3=2.0*np.pi,\
+            extra_A_data1=extra_A_data1,extra_A_data2=extra_A_data2, \
+            extra_B_data1=extra_B_data1,extra_B_data2=extra_B_data2, \
+            label_A_1 = r"$\mathrm{emt}\,(a=0.1\,\mathrm{AU}, \, e=0.45)$", \
+            label_A_2 = r"$\mathrm{Sepinsky}\,(a=0.1\,\mathrm{AU}, \, e=0.45)$", \
+            label_B_1 = r"$\mathrm{emt}\,(a=0.08\,\mathrm{AU}, \, e=0.2$)", \
+            label_B_2 = r"$\mathrm{Sepinsky}\,(a=0.08\,\mathrm{AU}, \, e=0.2$)")
 
     elif application_id==2: ### eccentric binary -- zero ejection/accretion radii vs nonzero
         args.M_d = 8.0
@@ -489,7 +575,7 @@ if __name__ == '__main__':
         args.R = 10.0
         args.t_end = 0.5
         args.mxstep=40000
-        
+
         args.model = "emt"
         data1 = integrator.integrate(args)
 
