@@ -65,6 +65,16 @@ def parse_arguments():
     parser.add_argument("--omega_out",                      type=float,     dest="omega_out",                   default=0.1,            help="Outer orbit argument of periapsis [rad]")    
     parser.add_argument("--i_rel",                          type=float,     dest="i_rel",                       default=1.0,            help="Inner-outer orbit mutual inclination [rad]")    
     
+    parser.add_argument("--spin_angular_frequency_d",       type=float,     dest="spin_angular_frequency_d",    default=0.0,            help="Donor spin angular frequency used for tides [rad/yr]")    
+    parser.add_argument("--spin_angular_frequency_a",       type=float,     dest="spin_angular_frequency_a",    default=0.0,            help="Accretor spin angular frequency used for tides [rad/yr]")    
+    parser.add_argument("--R_a",                            type=float,     dest="R_a",                         default=1.0,            help="Accretor radius for tides [RSun]")    
+    parser.add_argument("--k_div_T_tides_d",                type=float,     dest="k_div_T_tides_d",             default=0.0,            help="Donor spin angular frequency used for tides [rad/yr]")    
+    parser.add_argument("--k_div_T_tides_a",                type=float,     dest="k_div_T_tides_a",             default=0.0,            help="Accretor spin angular frequency used for tides [rad/yr]")    
+    parser.add_argument("--gyration_radius_d",              type=float,     dest="gyration_radius_d",           default=0.28,           help="Donor gyration radius rg used for tides [rad/yr] (I=rg^2 MR^2) ")    
+    parser.add_argument("--gyration_radius_a",              type=float,     dest="gyration_radius_a",           default=0.28,           help="Accretor gyration radius rg used for tides [rad/yr] (I=rg^2 MR^2)")    
+    parser.add_argument("--apsidal_motion_constant_d",      type=float,     dest="apsidal_motion_constant_d",   default=0.014,          help="Donor apsidal motion constant used for tides [rad/yr]")    
+    parser.add_argument("--apsidal_motion_constant_a",      type=float,     dest="apsidal_motion_constant_a",   default=0.014,          help="Accretor apsidal motion constant used for tides [rad/yr]")    
+    
 
     ### boolean arguments ###
     add_bool_arg(parser, 'verbose',                     default=False,          help="verbose terminal output")
@@ -79,6 +89,7 @@ def parse_arguments():
     add_bool_arg(parser, 'include_quadrupole_terms',    default=True,           help="inclusion of secular three-body quadrupole-order terms.")
     add_bool_arg(parser, 'include_octupole_terms',      default=True,           help="inclusion of secular three-body octupole-order terms.")
     add_bool_arg(parser, 'include_1PN_terms',           default=False,          help="inclusion of first post-Newtonian terms (only applied if --include_tertiary)")
+    add_bool_arg(parser, 'include_inner_tidal_terms',   default=False,          help="inclusion of inner binary equilibrium tides terms (only applied if --include_tertiary)")
     
     args = parser.parse_args()
                        
@@ -127,7 +138,9 @@ def RHS_function(RHR_vec, t, *ODE_args):
     e_out = 1.0-pow(10.0,RHR_vec[5])
     omega_out = RHR_vec[6]
     cos_i_rel = RHR_vec[7]
-
+    spin_angular_frequency_d = RHR_vec[8]
+    spin_angular_frequency_a = RHR_vec[9]
+    
     epsilon=1.0e-12
     if e<epsilon: ### some of the emt functions give nans for exactly zero eccentricity -- replace with tiny number in this case ###
         e=epsilon
@@ -143,23 +156,29 @@ def RHS_function(RHR_vec, t, *ODE_args):
     q = M_d/M_a
 
     R = R_function(args,M_d)
-
-    da_dt = de_dt = domega_dt = dM_d_dt = dM_a_dt = de_out_dt = domega_out_dt = dcos_i_rel_dt = 0.0
+    R_a = args.R_a*RSun_in_AU
+    
+    da_dt = de_dt = domega_dt = dM_d_dt = dM_a_dt = de_out_dt = domega_out_dt = dcos_i_rel_dt = dspin_angular_frequency_d_dt = dspin_angular_frequency_a_dt = 0.0
 
     ### calculate tertiary object EOM ###
     if args.include_tertiary == True:
-        de_in_dt_, de_out_dt_, domega_dt_, domega_out_dt_, dcos_i_rel_dt_ = \
+        da_in_dt_, de_in_dt_, de_out_dt_, domega_dt_, domega_out_dt_, dcos_i_rel_dt_, dspin_angular_frequency_d_dt_, dspin_angular_frequency_a_dt_ = \
             emtlibrary.triple_EOM(CONST_G,CONST_C,e,e_out,omega,omega_out,cos_i_rel, \
-            a,args.a_out,M_d,M_a,args.M_t, \
-            int(args.include_quadrupole_terms), int(args.include_octupole_terms), int(args.include_1PN_terms))
+            a, args.a_out, M_d, M_a, args.M_t, \
+            spin_angular_frequency_d, spin_angular_frequency_a, R, R_a, args.k_div_T_tides_d, args.k_div_T_tides_a, \
+            args.gyration_radius_d,args.gyration_radius_a,args.apsidal_motion_constant_d,args.apsidal_motion_constant_a, \
+            int(args.include_quadrupole_terms), int(args.include_octupole_terms), int(args.include_1PN_terms), int(args.include_inner_tidal_terms))
+        da_dt += da_in_dt_
         de_dt += de_in_dt_
         de_out_dt += de_out_dt_
         domega_dt += domega_dt_
         domega_out_dt += domega_out_dt_
         dcos_i_rel_dt += dcos_i_rel_dt_
+        dspin_angular_frequency_d_dt += dspin_angular_frequency_d_dt_
+        dspin_angular_frequency_a_dt += dspin_angular_frequency_a_dt_
     
         if verbose==True:
-            print 'include_tertiary',de_in_dt_, de_out_dt_, domega_dt_, domega_out_dt_, dcos_i_rel_dt_
+            print 'include_tertiary',da_in_dt_, de_in_dt_, de_out_dt_, domega_dt_, domega_out_dt_, dcos_i_rel_dt_, dspin_angular_frequency_d_dt_, dspin_angular_frequency_a_dt_
 
         
     
@@ -225,7 +244,7 @@ def RHS_function(RHR_vec, t, *ODE_args):
         exit(-1)
     
     if verbose==True and model == "emt":
-        print 'x',x,'a',a,'e',e,'fm',fm,'fa',fa,'fe',fe,'fomega',fomega,'E_tau',E_tau
+        print 'x',x,'a',a,'e',e,'fm',fm,'fa',fa,'fe',fe,'fomega',fomega
     
 
     if no_RLOF == False:
@@ -245,11 +264,11 @@ def RHS_function(RHR_vec, t, *ODE_args):
     dX_dt = -de_dt/(np.log(10.0)*(1.0-e))
     dY_dt = -de_out_dt/(np.log(10.0)*(1.0-e_out))
 
-    RHR_vec_dot = [da_dt,dX_dt,domega_dt,dM_d_dt,dM_a_dt,dY_dt,domega_out_dt,dcos_i_rel_dt]
+    RHR_vec_dot = [da_dt,dX_dt,domega_dt,dM_d_dt,dM_a_dt,dY_dt,domega_out_dt,dcos_i_rel_dt,dspin_angular_frequency_d_dt,dspin_angular_frequency_a_dt]
 
     return RHR_vec_dot
 
-def integrate(args):
+def integrate(args,return_spins=False):
     if args.verbose==True:
         print 'arguments:'
         from pprint import pprint
@@ -272,7 +291,10 @@ def integrate(args):
     omega = args.omega
     omega_out = args.omega_out
     i_rel = args.i_rel
-    
+
+    spin_angular_frequency_d = args.spin_angular_frequency_d
+    spin_angular_frequency_a = args.spin_angular_frequency_a
+
     q = M_d/M_a
 
     if args.scaled_t_end == True:
@@ -288,7 +310,7 @@ def integrate(args):
 
     ODE_args = (CONST_G,CONST_C,args)
 
-    RHR_vec = [a,np.log10(1.0-e),omega,M_d,M_a,np.log10(1.0-e_out),omega_out,np.cos(i_rel)]
+    RHR_vec = [a,np.log10(1.0-e),omega,M_d,M_a,np.log10(1.0-e_out),omega_out,np.cos(i_rel),spin_angular_frequency_d,spin_angular_frequency_a]
         
     if args.verbose==True:
         print 'RHR_vec',RHR_vec
@@ -304,7 +326,9 @@ def integrate(args):
     e_out_sol = 1.0 - pow(10.0,np.array(sol[:,5]))
     omega_out_sol = np.array(sol[:,6])
     cos_i_rel_sol = np.array(sol[:,7])
-    
+    spin_angular_frequency_d_sol = np.array(sol[:,8])
+    spin_angular_frequency_a_sol = np.array(sol[:,9])
+        
     E_0_sol = []
     for index,e in enumerate(e_sol):
         q = M_d_sol[index]/M_a_sol[index]
@@ -317,7 +341,10 @@ def integrate(args):
         E_0_sol.append(E_0)
     E_0_sol = np.array(E_0_sol)
     
-    return times,a_sol,e_sol,omega_sol,M_d_sol,M_a_sol,E_0_sol
+    if return_spins==False:
+        return times,a_sol,e_sol,omega_sol,M_d_sol,M_a_sol,E_0_sol
+    else:
+        return times,a_sol,e_sol,omega_sol,M_d_sol,M_a_sol,E_0_sol,spin_angular_frequency_d_sol,spin_angular_frequency_a_sol
     
 def plot_function(args,data):
     a = args.a
@@ -326,7 +353,7 @@ def plot_function(args,data):
     M_a = args.M_a
     times,a_sol,e_sol,omega_sol,M_d_sol,M_a_sol,E_0_sol = data
     times*= 1.0e-6
-    
+
     fontsize=18
     labelsize=12
     
@@ -367,6 +394,56 @@ def plot_function(args,data):
     
     pyplot.show()
     
+def plot_function_tides(args,data):
+    a = args.a
+    e = args.e
+    M_d = args.M_d
+    M_a = args.M_a
+    times,a_sol,e_sol,omega_sol,M_d_sol,M_a_sol,E_0_sol,spin_angular_frequency_d_sol,spin_angular_frequency_a_sol = data
+    times*= 1.0e-6
+
+    fontsize=18
+    labelsize=12
+    
+    fig=pyplot.figure(figsize=(8,8))
+    plot1=fig.add_subplot(3,1,1,yscale="linear")
+    plot2=fig.add_subplot(3,1,2,yscale="linear")
+    plot3=fig.add_subplot(3,1,3)
+    
+    plot1.plot(times,a_sol,color='k')
+    plot2.plot(times,e_sol,color='k')
+    plot3.plot(times,spin_angular_frequency_d_sol,color='k',label=r"$\Omega_1$")
+    plot3.plot(times,spin_angular_frequency_a_sol,color='g',label=r"$\Omega_2$")
+
+    af = a*(1.0-e**2) ### expected final semimajor axis (neglecting spins)
+    nf = np.sqrt(CONST_G*(M_d+M_a)/af**3)
+    plot1.axhline(y=a*af,color='r',linestyle='dashed',label="$\mathrm{Expected\,final\,}a$") 
+    plot3.axhline(y=nf,color='r',linestyle='dashed',label="$\mathrm{Expected\,final\,spin}$") 
+    
+    plots = [plot1,plot2,plot3]
+    #labels = [r"$a/\mathrm{AU}; \, r_\mathrm{p}/\mathrm{AU};\, r_\mathrm{a}/\mathrm{AU}$",r"$e$",r"$q; \, \mathcal{E}_0/\mathrm{rad}$"]
+    labels = [r"$a/\mathrm{AU}$",r"$e$",r"$\Omega_i$"]
+    for index,plot in enumerate(plots):
+        if index==2:
+            plot.set_xlabel(r"$t/\mathrm{Myr}$",fontsize=fontsize)
+        plot.set_ylabel(labels[index],fontsize=fontsize)
+                
+        plot.tick_params(axis='both', which ='major', labelsize = labelsize)
+
+        if index in [0,1]:
+            plot.set_xticklabels([])
+
+    handles,labels = plot1.get_legend_handles_labels()
+    plot1.legend(handles,labels,loc="upper right",fontsize=0.8*fontsize)
+
+    handles,labels = plot3.get_legend_handles_labels()
+    plot3.legend(handles,labels,loc="upper right",fontsize=0.8*fontsize)
+    
+    fig.subplots_adjust(hspace=0.0,wspace=0.0)
+    filename = 'elements_tides_' + str(args.name) + '.pdf'
+    fig.savefig(filename,dpi=200)
+    
+    pyplot.show()
     
 if __name__ == '__main__':
     args = parse_arguments()

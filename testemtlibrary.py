@@ -25,9 +25,9 @@ def test_XL0_q():
 
 
 def test_triple_EOM():
-    return_triple = emtlibrary.triple_EOM(1.0,1.0,0.1,0.1,0.1,0.1,0.1,1.0,100.0,1.0,1.0,1.0,1,1,1)
+    return_triple = emtlibrary.triple_EOM(1.0,1.0,0.1,0.1,0.1,0.1,0.1,1.0,100.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1,1,1,1)
     
-    assert round(return_triple[0],15) == 2.6340081e-08
-    assert round(return_triple[1],15) == 0.0
-    assert round(return_triple[2],15) == 8.57099233534009
-    assert round(return_triple[3],15) == 3.8817792e-08
+    assert round(return_triple[1],15) == 2.6340081e-08
+    assert round(return_triple[2],15) == 0.0
+    assert round(return_triple[3],15) == 8.57099233534009
+    assert round(return_triple[4],15) == 3.8817792e-08

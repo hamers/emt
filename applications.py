@@ -363,12 +363,23 @@ if __name__ == '__main__':
     args.include_quadrupole_terms = False
     args.include_octupole_terms = False
     args.include_1PN_terms = False
+    args.include_inner_tidal_terms = False
     args.omega = 0.1
     args.omega_out = 0.1
     args.e_out = 0.1
     args.a_out = 100.0
     args.i_rel = 0.0
     args.mxstep = 10000
+    
+    args.spin_angular_frequency_d = 1.0
+    args.spin_angular_frequency_a = 1.0
+    args.R_a = 1.0
+    args.k_div_T_tides_d = 0.0
+    args.k_div_T_tides_a = 0.0
+    args.gyration_radius_d = 0.28
+    args.gyration_radius_a = 0.28
+    args.apsidal_motion_constant_d = 0.014
+    args.apsidal_motion_constant_a = 0.014
     
     
     if application_id==-1: ### test triple implementation with Naoz reference system ###
@@ -393,10 +404,41 @@ if __name__ == '__main__':
         args.M_d_dot_av = -1.0e-20
 
         args.model = "emt"
+        args.name = "test_Naoz"
         
         data = integrator.integrate(args)
         integrator.plot_function(args,data)
+    if application_id==-2: ### test equilibrium tides implementation
+        args.e = 0.9
+        args.e_out = 0.6
+        args.a = 1.0
+        args.a_out = 100.0
+        args.M_d = 1.0
+        args.M_a = 1.0
+        args.M_t = 0.0
+        args.R = 10.0
+        args.R_a = 5.0
+        args.i_rel = 65.0*np.pi/180.0
+        args.rp_min = 1.0e-10
+        args.omega = 45.0*np.pi/180.0
+        args.include_tertiary = True ### should be True!
+        args.include_quadrupole_terms = False
+        args.include_octupole_terms = False
+        args.include_1PN_terms = False
+        args.include_inner_tidal_terms = True
 
+        args.k_div_T_tides_d = 1.0e-6
+        args.k_div_T_tides_a = 1.0e-6
+
+        args.scaled_t_end = False
+        args.t_end = 1.0e10
+        args.M_d_dot_av = 0.0
+
+        args.model = "emt"
+        args.name = "test_tides"
+        
+        data = integrator.integrate(args,return_spins=True)
+        integrator.plot_function_tides(args,data)
     if application_id==0: ### circular binary
         args.M_d = 1.0
         args.M_d_dot_av = -1.0e-8
