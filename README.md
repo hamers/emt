@@ -12,4 +12,5 @@ or, for more flexibility, use the included applications.py' script to define par
 in-script: `python applications.py --id x`, where `x` refers to the application.
 
 Adrian Hamers, November 2018
+
 Updated July 2019 (equilibrium tides)
