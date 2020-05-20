@@ -100,7 +100,7 @@ def determine_E_0(e,x,verbose=False):
     no_RLOF = False
     if x > 1.0/(1.0-e):
         if verbose==True:
-            print 'No RLOF','x',x,'1.0/(1.0-e)',1.0/(1.0-e)
+            print( 'No RLOF','x',x,'1.0/(1.0-e)',1.0/(1.0-e))
         #return [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
         E_0 = 0.0
         no_RLOF = True
@@ -108,12 +108,12 @@ def determine_E_0(e,x,verbose=False):
     elif x <= 1.0/(1.0+e):
         E_0 = np.pi
         if verbose==True:
-            print 'RLOF all phases','x',x,'1.0/(1.0+e)',1.0/(1.0+e)
+            print( 'RLOF all phases','x',x,'1.0/(1.0+e)',1.0/(1.0+e))
 
     else:
         E_0 = np.arccos( (1.0/e)*(1.0 - 1.0/x) )
         if verbose==True:
-            print 'RLOF partial orbit; E_0 = ',E_0
+            print( 'RLOF partial orbit; E_0 = ',E_0)
     return no_RLOF, E_0
 
 def R_function(args,M_d):
@@ -146,12 +146,12 @@ def RHS_function(RHR_vec, t, *ODE_args):
         e=epsilon
 
     if M_d <= epsilon or M_a <= epsilon:
-        print 'No more mass left! No further evolution.'
-        return [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+        print( 'No more mass left! No further evolution.')
+        return [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
 
     if a*(1.0-e) <= args.rp_min:
-        print 'Collision! No further evolution'
-        return [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
+        print( 'Collision! No further evolution')
+        return [0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]
 
     q = M_d/M_a
 
@@ -178,7 +178,7 @@ def RHS_function(RHR_vec, t, *ODE_args):
         dspin_angular_frequency_a_dt += dspin_angular_frequency_a_dt_
     
         if verbose==True:
-            print 'include_tertiary',da_in_dt_, de_in_dt_, de_out_dt_, domega_dt_, domega_out_dt_, dcos_i_rel_dt_, dspin_angular_frequency_d_dt_, dspin_angular_frequency_a_dt_
+            print( 'include_tertiary',da_in_dt_, de_in_dt_, de_out_dt_, domega_dt_, domega_out_dt_, dcos_i_rel_dt_, dspin_angular_frequency_d_dt_, dspin_angular_frequency_a_dt_)
 
         
     
@@ -238,13 +238,13 @@ def RHS_function(RHR_vec, t, *ODE_args):
                     finite_size_term_e -= q*(args.accretion_radius*RSun_in_AU/a)*he
             
                 if verbose==True:
-                    print 'include_ejection_radius',args.include_ejection_radius,'include_accretion_radius',args.include_accretion_radius,'finite_size_term_a',finite_size_term_a,'ga',ga,'ge',ge,'ha',ha,'he',he
+                    print( 'include_ejection_radius',args.include_ejection_radius,'include_accretion_radius',args.include_accretion_radius,'finite_size_term_a',finite_size_term_a,'ga',ga,'ge',ge,'ha',ha,'he',he)
     else:
-        print 'ERROR: invalid model -- should be sep or emt'
+        print( 'ERROR: invalid model -- should be sep or emt')
         exit(-1)
     
     if verbose==True and model == "emt":
-        print 'x',x,'a',a,'e',e,'fm',fm,'fa',fa,'fe',fe,'fomega',fomega
+        print( 'x',x,'a',a,'e',e,'fm',fm,'fa',fa,'fe',fe,'fomega',fomega)
     
 
     if no_RLOF == False:
@@ -270,9 +270,10 @@ def RHS_function(RHR_vec, t, *ODE_args):
 
 def integrate(args,return_spins=False):
     if args.verbose==True:
-        print 'arguments:'
-        from pprint import pprint
-        pprint(vars(args))
+        pass
+        #print 'arguments:'
+        #from pprint import pprint
+        #pprint(vars(args))
 
     if args.plot_fancy == True:
         pyplot.rc('text',usetex=True)
@@ -303,7 +304,7 @@ def integrate(args,return_spins=False):
         t_end = args.t_end
     
     if args.verbose==True:
-        print 't_end/yr',t_end
+        print( 't_end/yr',t_end)
         
     N_steps = args.N_steps
     times = np.linspace(0.0, t_end, N_steps)
@@ -313,7 +314,7 @@ def integrate(args,return_spins=False):
     RHR_vec = [a,np.log10(1.0-e),omega,M_d,M_a,np.log10(1.0-e_out),omega_out,np.cos(i_rel),spin_angular_frequency_d,spin_angular_frequency_a]
         
     if args.verbose==True:
-        print 'RHR_vec',RHR_vec
+        print( 'RHR_vec',RHR_vec)
     
     ### numerical solution ###
     sol = odeint(RHS_function, RHR_vec, times, args=ODE_args,mxstep=args.mxstep)
@@ -451,7 +452,7 @@ if __name__ == '__main__':
     data = integrate(args)
     if args.plot == True:
         if HAS_MATPLOTLIB == False:
-            print 'Error importing Matplotlib -- not making plot'
+            print( 'Error importing Matplotlib -- not making plot')
             exit(-1)
         plot_function(args,data)
 

@@ -499,8 +499,10 @@ if __name__ == '__main__':
         args.t_end = 0.5
         
         args.e = 0.92
+
         args.model = "emt"
         data_emt = integrator.integrate(args)
+        
 
         args.model = "sep"
         data_sep = integrator.integrate(args)
@@ -624,7 +626,7 @@ if __name__ == '__main__':
         P_orb = 2.0*np.pi*np.sqrt(args.a**3/(G*(args.M_d+args.M_a)))
         t_hyd = np.sqrt( ((args.R*RSun_in_AU)**3)/(G*args.M_d**3))
         tau = 10*t_hyd
-        print 't_hyd/yr',t_hyd,'t_hyd/d',t_hyd*365.25,'tau/yr',tau
+        print( 't_hyd/yr',t_hyd,'t_hyd/d',t_hyd*365.25,'tau/yr',tau)
 
         ### Modify lines below to determine whether tau should be constant, or n*tau should be constant
         args.tau = tau
@@ -684,7 +686,7 @@ if __name__ == '__main__':
             data = pickle.load( open( "applications_data_id_5.pickle", "rb" ) )
             data1,data2 = data
         except:
-            print 'Error loading pickled data -- did you first run the script with --calc?'
+            print( 'Error loading pickled data -- did you first run the script with --calc?')
             exit(-1)
 
 
@@ -742,7 +744,7 @@ if __name__ == '__main__':
             data = pickle.load( open( "applications_data_id_6.pickle", "rb" ) )
             data1,data2 = data
         except:
-            print 'Error loading pickled data -- did you first run the script with --calc?'
+            print ('Error loading pickled data -- did you first run the script with --calc?')
             exit(-1)
 
         cmd_args.plot1_loc = "center left"
